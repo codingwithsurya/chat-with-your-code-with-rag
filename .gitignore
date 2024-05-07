@@ -1,0 +1,33 @@
+# IDE and editor directories
+.idea/
+.codeium/
+
+# Project specific directories
+weights/
+.cache/
+.ollama/
+.lightning_studio/
+# Logs and data that don't need to be shared
+log/
+nltk_data/
+
+# Python and development artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.bak
+*.tmp
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Operating system generated files
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+venv/
+env/
