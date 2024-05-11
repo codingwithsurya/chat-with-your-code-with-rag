@@ -25,7 +25,7 @@ class RAGClient:
         llm = ChatOllama(model=model)
         prompt_template = ChatPromptTemplate.from_template(
             (
-                "You are llama3, a large language model developed by Meta AI. Please answer the following question based on the provided `context` that follows the question.\n"
+                "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Please answer the following question based on the provided `context` that follows the question.\n"
                 "Think step by step before coming to answer. If you do not know the answer then just say 'I do not know'\n"
                 "question: {question}\n"
                 "context: ```{context}```\n"
