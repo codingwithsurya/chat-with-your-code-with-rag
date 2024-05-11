@@ -32,7 +32,7 @@ from rag_101.retriever import (
 nest_asyncio.apply()
 
 # setting up the llm
-llm=Ollama(model="mistral", request_timeout=60.0)
+llm=Ollama(model="llama3", request_timeout=60.0)
 
 # setting up the embedding model
 lc_embedding_model = load_embedding_model()

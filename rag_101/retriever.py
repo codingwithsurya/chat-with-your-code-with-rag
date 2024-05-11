@@ -140,7 +140,7 @@ def load_reranker_model(
 def main(
     file: str = "example_data/2401.08406.pdf",
     query: Optional[str] = None,
-    llm_name="mistral",
+    llm_name="llama3",
 ):
     docs = load_pdf(files=file)
 

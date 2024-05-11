@@ -18,7 +18,7 @@ class RAGClient:
     embedding_model = load_embedding_model()
     reranker_model = load_reranker_model()
 
-    def __init__(self, files, model="mistral"):
+    def __init__(self, files, model="llama3"):
         docs = load_pdf(files=files)
         self.retriever = create_parent_retriever(docs, self.embedding_model)
 
