@@ -96,7 +96,7 @@ def setup_query_engine(github_url):
             "---------------------\n"
             "{context_str}\n"
             "---------------------\n"
-            "Given the context information above I want you to think step by step to answer the query in a crisp manner, incase case you don't know the answer say 'I don't know!'.\n"
+            "You are llama3, a large language model developed by Meta AI. Given the context information above I want you to think step by step to answer the query in a crisp manner, incase case you don't know the answer say 'I don't know!'.\n"
             "Query: {query_str}\n"
             "Answer: "
             )

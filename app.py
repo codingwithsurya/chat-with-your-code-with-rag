@@ -110,7 +110,7 @@ with st.sidebar:
                     "---------------------\n"
                     "{context_str}\n"
                     "---------------------\n"
-                    "Given the context information above I want you to think step by step to answer the query in a crisp manner, incase case you don't know the answer say 'I don't know!'.\n"
+                    "You are llama3, a large language model developed by Meta AI. Given the context information above I want you to think step by step to answer the query in a crisp manner, incase case you don't know the answer say 'I don't know!'.\n"
                     "Query: {query_str}\n"
                     "Answer: "
                     )
@@ -140,7 +140,7 @@ with st.sidebar:
 col1, col2 = st.columns([6, 1])
 
 with col1:
-    st.header(f"Chat with your code! </>")
+    st.header(f"Chat with your code! Powered by Llama3 🦙🚀")
 
 with col2:
     st.button("Clear ↺", on_click=reset_chat)
