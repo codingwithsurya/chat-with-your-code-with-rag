@@ -50,10 +50,11 @@ def validate_owner_repo(owner, repo):
     return bool(owner) and bool(repo)
 
 
-if "id" not in st.session_state:
-    st.session_state.id = uuid.uuid4()
-    st.session_state.file_cache = {}
+# Initialize the 'id' attribute if it doesn't exist
+if 'id' not in st.session_state:
+    st.session_state.id = uuid.uuid4()  # or set to some default value
 
+# Your existing code
 session_id = st.session_state.id
 client = None
 
