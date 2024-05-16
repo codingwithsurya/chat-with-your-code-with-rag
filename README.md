@@ -21,7 +21,7 @@ I am currently working on setting up a production environment so this project is
 
 This project utilizes several key libraries:
 
-- **`llama_index`**: For indexing and querying the codebase efficiently.
+- **`llama_index`**: For indexing and querying the codebase efficiently via a vector database.
 - **`langchain`**: Utilized for embedding the codebase to improve retrieval performance.
 - **`ollama`**: Helps us incorporate llama3
 
