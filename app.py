@@ -29,6 +29,10 @@ from rag_101.retriever import (
     load_reranker_model
 )
 
+# Initialize the 'id' attribute if it doesn't exist
+if 'id' not in st.session_state:
+    st.session_state.id = uuid.uuid4()  # or set to some default value
+
 # setting up the llm
 llm=Ollama(model="llama3", request_timeout=60.0)
 
@@ -50,11 +54,9 @@ def validate_owner_repo(owner, repo):
     return bool(owner) and bool(repo)
 
 
-# Initialize the 'id' attribute if it doesn't exist
-if 'id' not in st.session_state:
-    st.session_state.id = uuid.uuid4()  # or set to some default value
 
-# Your existing code
+
+
 session_id = st.session_state.id
 client = None
 
