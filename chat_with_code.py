@@ -52,7 +52,7 @@ def clone_github_repo(repo_url):
         print(f"Failed to clone repository: {e}")
         return None
 
-
+# utility function to validate owner and repo
 def validate_owner_repo(owner, repo):
     return bool(owner) and bool(repo)
 
