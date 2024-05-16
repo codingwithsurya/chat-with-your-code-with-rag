@@ -11,6 +11,7 @@ The RAG (retrieval augmented generation) model combines the best of retrieval an
 I am currently working on setting up a production environment so this project is accessible to everyone. Please bear with me as I try to find more GPUs! 🫡
 
 ## Repository Structure
+- **`main.ipynb`**: Sample jupyter notebook to show you how it works!
 - **`chat_with_code.py`**: This module interacts with a GitHub repository, cloning it, loading its data, and setting up a query engine for conversational interactions.
 - **`rag_101/`**: Contains the implementation of the RAG model utilized in this project.
 - **`architecture-diagram.png`**: A bird's eye view on the project!
