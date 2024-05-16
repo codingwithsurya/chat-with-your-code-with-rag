@@ -4,7 +4,7 @@ This repo enables you to have an AI-powered conversational interface with your G
 
 ## About RAG
 
-The RAG (retrieval augmented generation) model combines the best of retrieval and generative response capabilities to provide contextually appropriate responses based on a retrieved set of documents (or code in this case!). More details on the RAG approach can be found in the [original RAG paper](https://arxiv.org/abs/2005.11401). In this project, RAG is fine-tuned with Llama3 to specifically adapt to the domain of code, enhancing its ability to understand and generate technical content accurately.
+The RAG (retrieval augmented generation) model combines the best of retrieval and generative response capabilities to provide contextually appropriate responses based on a retrieved set of documents (or code in this case!). More details on the RAG approach can be found in the [original RAG paper](https://arxiv.org/abs/2005.11401). In this project, RAG is fine-tuned with Llama3 to specifically adapt to the domain of code, enhancing its ability to understand and generate code reviews and snippets accurately, and most importantly, in context with the whole repo.
 
 ## Production Environment Setup
 
