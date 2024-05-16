@@ -80,12 +80,9 @@ def setup_query_engine(github_url):
         try:
             docs = loader.load_data()
 
-            # ====== Create vector store and upload data ======
+             # ====== Create vector store and upload data ======
             Settings.embed_model = embed_model
             index = VectorStoreIndex.from_documents(docs, show_progress=True)
-            # TODO try async index creation for faster emebdding generation & persist it to memory!
-            # index = VectorStoreIndex(docs, use_async=True)
-
             # ====== Setup a query engine ======
             Settings.llm = llm
             query_engine = index.as_query_engine(similarity_top_k=4)

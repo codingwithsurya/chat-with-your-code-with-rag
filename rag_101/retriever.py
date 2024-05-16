@@ -32,15 +32,66 @@ class RAGException(Exception):
         super().__init__(*args, **kwargs)
 
 
-def rerank_docs(reranker_model, query, retrieved_docs):
-    query_and_docs = [(query, r.page_content) for r in retrieved_docs]
-    scores = reranker_model.predict(query_and_docs)
-    return sorted(list(zip(retrieved_docs, scores)), key=lambda x: x[1], reverse=True)
+
+def load_embedding_model(
+    model_name: str = "BAAI/bge-large-en-v1.5", device: str = "cuda"
+) -> HuggingFaceBgeEmbeddings:
+    """
+    Loads and returns a HuggingFaceBgeEmbeddings model for embedding text. This embedding model is used to encode the documents and queries for retrieval.
+
+    Args:
+        model_name (str): The name or path of the pre-trained model to load. Defaults to "BAAI/bge-large-en-v1.5".
+        device (str): The device to use for model inference. Defaults to "cuda".
+
+    Returns:
+        HuggingFaceBgeEmbeddings: The loaded HuggingFaceBgeEmbeddings model.
+    """
+    model_kwargs = {"device": device}
+    encode_kwargs = {
+        "normalize_embeddings": True
+    }  # set True to compute cosine similarity
+    embedding_model = HuggingFaceBgeEmbeddings(
+        model_name=model_name,
+        model_kwargs=model_kwargs,
+        encode_kwargs=encode_kwargs,
+    )
+    return embedding_model
+
+
+def load_reranker_model(
+    reranker_model_name: str = "BAAI/bge-reranker-large", device: str = "cuda"
+) -> CrossEncoder:
+    """
+    Loads a reranker model from the specified model name and device. We will use CrossEncoder model as defined in https://arxiv.org/abs/2005.11401 for reranking the retrieved documents.
+
+    Args:
+        reranker_model_name (str): The name of the reranker model to load.
+        device (str): The device to use for running the model (default: "cuda").
+
+    Returns:
+        CrossEncoder: The loaded reranker model.
+
+    """
+    reranker_model = CrossEncoder(
+        model_name=reranker_model_name, max_length=512, device=device
+    )
+    return reranker_model
 
 
 def load_pdf(
     files: Union[str, List[str]] = "example_data/2401.08406.pdf"
 ) -> List[Document]:
+    """
+    Load PDF files and return a list of Document objects. This is useful because the RAG model requires a list of Document objects as input.
+
+    Args:
+        files (Union[str, List[str]], optional): Path(s) to the PDF file(s) to load. Defaults to "example_data/2401.08406.pdf".
+
+    Returns:
+        List[Document]: A list of Document objects representing the loaded PDF files.
+    """
+
+    # If a single file is provided, load it and return the Document object
     if isinstance(files, str):
         loader = UnstructuredFileLoader(
             files,
@@ -48,6 +99,7 @@ def load_pdf(
         )
         return loader.load()
 
+    # If multiple files are provided, load each file and return a list of Document objects
     loaders = [
         UnstructuredFileLoader(
             file,
@@ -55,12 +107,33 @@ def load_pdf(
         )
         for file in files
     ]
+
+    # Load the documents from all the loaders
     docs = []
     for loader in loaders:
         docs.extend(
             loader.load(),
         )
     return docs
+
+def rerank_docs(reranker_model, query, retrieved_docs):
+    '''
+    Reranks the retrieved documents based on a given query and a reranker model.
+
+    Args:
+        reranker_model (object): The reranker model used for reranking the documents.
+        query (str): The query used for reranking.
+        retrieved_docs (list): A list of retrieved documents.
+
+    Returns:
+        list: A sorted list of tuples containing the retrieved documents and their corresponding scores, 
+              sorted in descending order of scores.
+
+    '''
+    query_and_docs = [(query, r.page_content) for r in retrieved_docs]
+    scores = reranker_model.predict(query_and_docs)
+    return sorted(list(zip(retrieved_docs, scores)), key=lambda x: x[1], reverse=True)
+
 
 
 def create_parent_retriever(
@@ -111,30 +184,6 @@ def retrieve_context(query, retriever, reranker_model):
         query=query, retrieved_docs=retrieved_docs, reranker_model=reranker_model
     )
     return reranked_docs
-
-
-def load_embedding_model(
-    model_name: str = "BAAI/bge-large-en-v1.5", device: str = "cuda"
-) -> HuggingFaceBgeEmbeddings:
-    model_kwargs = {"device": device}
-    encode_kwargs = {
-        "normalize_embeddings": True
-    }  # set True to compute cosine similarity
-    embedding_model = HuggingFaceBgeEmbeddings(
-        model_name=model_name,
-        model_kwargs=model_kwargs,
-        encode_kwargs=encode_kwargs,
-    )
-    return embedding_model
-
-
-def load_reranker_model(
-    reranker_model_name: str = "BAAI/bge-reranker-large", device: str = "cuda"
-) -> CrossEncoder:
-    reranker_model = CrossEncoder(
-        model_name=reranker_model_name, max_length=512, device=device
-    )
-    return reranker_model
 
 
 def main(
