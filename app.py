@@ -7,7 +7,6 @@ os.environ["TORCH_HOME"] = "/teamspace/studios/this_studio/weights"
 import gc
 import re
 import uuid
-import textwrap
 import subprocess
 import nest_asyncio
 from dotenv import load_dotenv
@@ -33,14 +32,20 @@ from rag_101.retriever import (
 if 'id' not in st.session_state:
     st.session_state.id = uuid.uuid4()  # or set to some default value
 
-# setting up the llm
-llm=Ollama(model="llama3", request_timeout=60.0)
+# Initialize chat history and query engine if they don't exist
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "query_engine" not in st.session_state:
+    st.session_state.query_engine = None
 
-# setting up the embedding model
+# Setting up the llm
+llm = Ollama(model="llama3", request_timeout=60.0)
+
+# Setting up the embedding model
 lc_embedding_model = load_embedding_model()
 embed_model = LangchainEmbedding(lc_embedding_model)
 
-# utility functions
+# Utility functions
 def parse_github_url(url):
     pattern = r"https://github\.com/([^/]+)/([^/]+)"
     match = re.match(pattern, url)
@@ -49,26 +54,15 @@ def parse_github_url(url):
 def clone_repo(repo_url):
     return subprocess.run(["git", "clone", repo_url], check=True, text=True, capture_output=True)
 
-
 def validate_owner_repo(owner, repo):
     return bool(owner) and bool(repo)
-
-
-
-
-
-session_id = st.session_state.id
-client = None
-
 
 def reset_chat():
     st.session_state.messages = []
     st.session_state.context = None
     gc.collect()
 
-
 with st.sidebar:
-    
     # Input for GitHub URL
     github_url = st.text_input("GitHub Repository URL")
 
@@ -89,7 +83,7 @@ with st.sidebar:
 
                     if os.path.exists(input_dir_path):
                         loader = SimpleDirectoryReader(
-                            input_dir = input_dir_path,
+                            input_dir=input_dir_path,
                             required_exts=[".py", ".ipynb", ".js", ".ts", ".md"],
                             recursive=True
                         )
@@ -107,7 +101,7 @@ with st.sidebar:
                     Settings.llm = llm
                     query_engine = index.as_query_engine(streaming=True, similarity_top_k=4)
                     
-                    # ====== Customise prompt template ======
+                    # ====== Customize prompt template ======
                     qa_prompt_tmpl_str = (
                     "Context information is below.\n"
                     "---------------------\n"
@@ -148,17 +142,10 @@ with col1:
 with col2:
     st.button("Clear ↺", on_click=reset_chat)
 
-
-# Initialize chat history
-if "messages" not in st.session_state:
-    reset_chat()
-
-
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-
 
 # Accept user input
 if prompt := st.chat_input("What's up?"):
@@ -172,7 +159,7 @@ if prompt := st.chat_input("What's up?"):
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
-        
+
         # context = st.session_state.context
         query_engine = st.session_state.query_engine
 
@@ -183,10 +170,7 @@ if prompt := st.chat_input("What's up?"):
             full_response += chunk
             message_placeholder.markdown(full_response + "▌")
 
-        # full_response = query_engine.query(prompt)
-
         message_placeholder.markdown(full_response)
-        # st.session_state.context = ctx
 
     # Add assistant response to chat history
     st.session_state.messages.append({"role": "assistant", "content": full_response})
