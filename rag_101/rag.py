@@ -26,10 +26,11 @@ def main(
     llm = ChatOllama(model=llm_name)
     prompt_template = ChatPromptTemplate.from_template(
         (
-            "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Please answer the following question based on the provided `context` that follows the question.\n"
-            "If you do not know the answer then just say 'I do not know'\n"
-            "question: {question}\n"
-            "context: ```{context}```\n"
+        "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Please answer the following question based on the provided `context` and `repository AST` that follows the question.\n"
+        "Think step by step before coming to an answer, considering both the code content and the file structure. If you do not know the answer then just say 'I do not know'\n"
+        "Repository AST: {repo_ast}\n"
+        "question: {question}\n"
+        "context: ```{context}```\n"
         )
     )
     chain = prompt_template | llm | StrOutputParser()
@@ -40,7 +41,7 @@ def main(
         context = retrieve_context(
             query, retriever=retriever, reranker_model=reranker_model
         )[0]
-        # Print the beginning of the response
+        # Print the beginning of the responses
         print("LLM Response: ", end="")
         # Generate a response using the retrieved context and the query, and print it
         for e in chain.stream({"context": context[0].page_content, "question": query}):

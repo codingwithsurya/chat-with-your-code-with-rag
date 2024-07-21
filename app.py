@@ -1,5 +1,6 @@
 # Adapted from https://docs.streamlit.io/knowledge-base/tutorials/build-conversational-apps#build-a-simple-chatbot-gui-with-streaming
 import os
+import json
 
 os.environ["HF_HOME"] = "/teamspace/studios/this_studio/weights"
 os.environ["TORCH_HOME"] = "/teamspace/studios/this_studio/weights"
@@ -23,9 +24,12 @@ from llama_index.core.storage.storage_context import StorageContext
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from llama_index.embeddings.langchain import LangchainEmbedding
 
+
+
 from rag_101.retriever import (
     load_embedding_model,
-    load_reranker_model
+    load_reranker_model, 
+    generate_repo_ast
 )
 
 # Initialize the 'id' attribute if it doesn't exist
@@ -124,6 +128,7 @@ with st.sidebar:
                             "No data found, check if the repository is not empty!"
                         )
                     st.session_state.query_engine = query_engine
+                    st.session_state.repo_ast = generate_repo_ast(f"/teamspace/studios/this_studio/{repo}")
 
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
@@ -164,8 +169,8 @@ if prompt := st.chat_input("What's up?"):
         query_engine = st.session_state.query_engine
 
         # Simulate stream of response with milliseconds delay
-        streaming_response = query_engine.query(prompt)
-        
+        streaming_response = query_engine.query(f'Given the repository AST:\n{json.dumps(st.session_state.repo_ast, indent=2)}\n\nAnd the following question: {prompt}')
+
         for chunk in streaming_response.response_gen:
             full_response += chunk
             message_placeholder.markdown(full_response + "▌")

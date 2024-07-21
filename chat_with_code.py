@@ -1,4 +1,5 @@
 import os
+import ast
 
 os.environ["HF_HOME"] = "/teamspace/studios/this_studio/weights"
 os.environ["TORCH_HOME"] = "/teamspace/studios/this_studio/weights"
@@ -56,6 +57,25 @@ def clone_github_repo(repo_url):
 def validate_owner_repo(owner, repo):
     return bool(owner) and bool(repo)
 
+def generate_repo_ast(repo_path):
+    repo_summary = {}
+    for root, dirs, files in os.walk(repo_path):
+        for file in files:
+            if file.endswith('.py'):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    try:
+                        tree = ast.parse(f.read())
+                        # Count the number of each type of AST node
+                        node_counts = {}
+                        for node in ast.walk(tree):
+                            node_type = type(node).__name__
+                            node_counts[node_type] = node_counts.get(node_type, 0) + 1
+                        repo_summary[file_path] = node_counts
+                    except SyntaxError:
+                        repo_summary[file_path] = "Unable to parse file"
+    return repo_summary
+
 # Setup a query engine
 
 def setup_query_engine(github_url):
@@ -80,6 +100,10 @@ def setup_query_engine(github_url):
         try:
             docs = loader.load_data()
 
+            repo_ast = generate_repo_ast(input_dir_path)
+            ast_text = json.dumps(repo_ast, indent=2)
+            docs.append(Document(page_content=f"Repository AST:\n{ast_text}", metadata={"source": "repo_ast"}))
+
              # ====== Create vector store and upload data ======
             Settings.embed_model = embed_model
             index = VectorStoreIndex.from_documents(docs, show_progress=True)
@@ -87,13 +111,16 @@ def setup_query_engine(github_url):
             Settings.llm = llm
             query_engine = index.as_query_engine(similarity_top_k=4)
             
-            # ====== Customise prompt template ======
+             # ====== Customise prompt template ======
             qa_prompt_tmpl_str = (
             "Context information is below.\n"
             "---------------------\n"
             "{context_str}\n"
             "---------------------\n"
-            "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Given the context information above I want you to think step by step to answer the query in a crisp manner, incase case you don't know the answer say 'I don't know!'.\n"
+            "Repository AST:\n"
+            "{repo_ast}\n"
+            "---------------------\n"
+            "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Given the context information and repository AST above, I want you to think step by step to answer the query in a crisp manner, considering both the code content and the file structure. If you don't know the answer, say 'I don't know!'.\n"
             "Query: {query_str}\n"
             "Answer: "
             )
@@ -122,5 +149,5 @@ github_url = "https://github.com/Lightning-AI/lit-gpt"
 
 query_engine = setup_query_engine(github_url=github_url)
 
-response = query_engine.query('Can you provide a step by step guide to finetuning an llm using lit-gpt')
+response = query_engine.query(f'Given the repository AST:\n{json.dumps(repo_ast, indent=2)}\n\nCan you provide a step by step guide to finetuning an llm using lit-gpt, considering the file structure?')
 print(response)

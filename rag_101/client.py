@@ -3,6 +3,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
+import ast
 
 from rag_101.retriever import (
     RAGException,
@@ -25,14 +26,42 @@ class RAGClient:
         llm = ChatOllama(model=model)
         prompt_template = ChatPromptTemplate.from_template(
             (
-                "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Please answer the following question based on the provided `context` that follows the question.\n"
-                "Think step by step before coming to answer. If you do not know the answer then just say 'I do not know'\n"
+                "You are llama3, a large language model developed by Meta AI. Surya has integrated you into this environment so you can answer any user's coding questions! Please answer the following question based on the provided `context` and `repository AST` that follows the question.\n"
+                "Think step by step before coming to an answer, considering both the code content and the file structure. If you do not know the answer then just say 'I do not know'\n"
+                "Repository AST: {repo_ast}\n"
                 "question: {question}\n"
                 "context: ```{context}```\n"
             )
         )
         # Pipeline: format query -> generate response -> parse to string
         self.chain = prompt_template | llm | StrOutputParser()
+
+        self.repo_ast = self.generate_repo_ast(files[0] if isinstance(files, list) else files)
+        ast_text = json.dumps(self.repo_ast, indent=2)
+        self.retriever.add_documents([Document(page_content=f"Repository AST:\n{ast_text}", metadata={"source": "repo_ast"})])
+
+    def generate_repo_ast(repo_path):
+        repo_summary = {}
+        for root, dirs, files in os.walk(repo_path):
+            for file in files:
+                if file.endswith('.py'):
+                    file_path = os.path.join(root, file)
+                    with open(file_path, 'r') as f:
+                        try:
+                            tree = ast.parse(f.read())
+                            # Count the number of each type of AST node
+                            node_counts = {}
+                            for node in ast.walk(tree):
+                                node_type = type(node).__name__
+                                node_counts[node_type] = node_counts.get(node_type, 0) + 1
+                            repo_summary[file_path] = node_counts
+                        except SyntaxError:
+                            repo_summary[file_path] = "Unable to parse file"
+        return repo_summary
+
+    def query(self, question: str) -> str:
+        response = self.chain.invoke({"context": "", "question": question, "repo_ast": json.dumps(self.repo_ast, indent=2)})
+        return response
 
     
     def stream(self, query: str) -> dict:
@@ -54,7 +83,7 @@ class RAGClient:
             # Extract the content of the page from the context
             context = context.page_content
             # If the similarity score is low, add a warning to the context
-            if similarity_score < 0.005:
+            if (similarity_score < 0.005):
                 context = "This context is not confident. " + context
         # If no relevant context is found, a RAGException is raised
         except RAGException as e:
@@ -63,7 +92,7 @@ class RAGClient:
         # Log the context for debugging purposes
         logger.info(context)
         # Generate a stream of responses using the retrieved context and the original query
-        for r in self.chain.stream({"context": context, "question": query}):
+        for r in self.chain.stream({"context": context, "question": query, "repo_ast": json.dumps(self.repo_ast, indent=2)}):
             yield r
 
     def retrieve_context(self, query: str):
@@ -71,29 +100,28 @@ class RAGClient:
             query, retriever=self.retriever, reranker_model=self.reranker_model
         )
 
-   
     def generate(self, query: str) -> dict:
         """
-            Generate a response for the given query.
+        Generate a response for the given query.
 
-            Args:
-                query (str): The input query.
+        Args:
+            query (str): The input query.
 
-            Returns:
-                dict: A dictionary containing the generated response and associated contexts.
-                    The dictionary has the following structure:
-                    {
-                        "contexts": List[Tuple[Context, float]],
-                        "response": str
-                    }
-                    - "contexts" is a list of tuples, where each tuple contains a Context object and its relevance score.
-                    - "response" is the generated response string.
-            """
+        Returns:
+            dict: A dictionary containing the generated response and associated contexts.
+                The dictionary has the following structure:
+                {
+                    "contexts": List[Tuple[Context, float]],
+                    "response": str
+                }
+                - "contexts" is a list of tuples, where each tuple contains a Context object and its relevance score.
+                - "response" is the generated response string.
+        """
         contexts = self.retrieve_context(query)
 
         return {
             "contexts": contexts,
             "response": self.chain.invoke(
-                {"context": contexts[0][0].page_content, "question": query}
+                {"context": contexts[0][0].page_content, "question": query, "repo_ast": json.dumps(self.repo_ast, indent=2)}
             ),
         }

@@ -1,4 +1,5 @@
 import os
+import ast
 
 os.environ["HF_HOME"] = "/teamspace/studios/this_studio/weights"
 os.environ["TORCH_HOME"] = "/teamspace/studios/this_studio/weights"
@@ -220,26 +221,39 @@ def main(
     query: Optional[str] = None,
     llm_name="llama3",
 ):
-    """Main function that performs the retrieval and printing of the context.
-
-    Args:
-        file (str, optional): The file path of the PDF document to load. Defaults to "example_data/2401.08406.pdf".
-        query (str, optional): The query string to search for in the document. Defaults to None.
-        llm_name (str, optional): The name of the llama model to use. Defaults to "llama3".
-    """
     docs = load_pdf(files=file)
-
     embedding_model = load_embedding_model()
     retriever = create_parent_retriever(docs, embedding_model)
     reranker_model = load_reranker_model()
+
+    repo_ast = generate_repo_ast(os.path.dirname(file))
+    ast_text = json.dumps(repo_ast, indent=2)
+    retriever.add_documents([Document(page_content=f"Repository AST:\n{ast_text}", metadata={"source": "repo_ast"})])
 
     context = retrieve_context(
         query, retriever=retriever, reranker_model=reranker_model
     )[0]
     print("context:\n", context, "\n", "=" * 50, "\n")
 
+def generate_repo_ast(repo_path):
+    repo_summary = {}
+    for root, dirs, files in os.walk(repo_path):
+        for file in files:
+            if file.endswith('.py'):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    try:
+                        tree = ast.parse(f.read())
+                        # Count the number of each type of AST node
+                        node_counts = {}
+                        for node in ast.walk(tree):
+                            node_type = type(node).__name__
+                            node_counts[node_type] = node_counts.get(node_type, 0) + 1
+                        repo_summary[file_path] = node_counts
+                    except SyntaxError:
+                        repo_summary[file_path] = "Unable to parse file"
+    return repo_summary
 
 if __name__ == "__main__":
     from jsonargparse import CLI
-
     CLI(main)
