@@ -1,8 +1,8 @@
-# Chat with Your Code with RAG! Powered by Llama3.1 🦙🚀
+# Chat with Your Code with RAG! Powered by Llama3 🦙🚀
 
-This repo enables you to have an AI-powered conversational interface with your GitHub codebase. By integrating the leading frontier open-source model, Llama3-450b, fine-tuned with retrieval augmented generation, you can now search and understand any codebase in natural language.
+This repo enables you to have an AI-powered conversational interface with your GitHub codebase. By integrating the leading frontier open-source model, Llama3-70b, fine-tuned with retrieval augmented generation, you can now search and understand any codebase in natural language.
 
-You can access it here, on Lightning AI: https://lightning.ai/ssubrama32/studios/chat-with-your-code-with-rag-powered-by-llama3-1. You can run it by clicking `Open in Free Studio`, navigating to `Streamlit Apps` on the right hand side, choosing `app.py` and then click `Run`! The cool thing about Lighting AI is that you can easily rent GPUs on the cloud, for free! Make sure to install ollama and run `ollama run llama3.1:450b` to start the model :)
+You can access it here, on Lightning AI: https://lightning.ai/ssubrama32/studios/chat-with-your-code-with-rag-powered-by-llama3. You can run it by clicking `Open in Free Studio`, navigating to `Streamlit Apps` on the right hand side, choosing `app.py` and then click `Run`! The cool thing about Lighting AI is that you can easily rent GPUs on the cloud, for free! Make sure to install ollama and run `ollama run llama3.1:450b` to start the model :)
 
 ## About RAG
 
